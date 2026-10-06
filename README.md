@@ -1,72 +1,172 @@
 # STM32 NUCLEO-F446RE LED Blink
 
+![Board](https://img.shields.io/badge/Board-NUCLEO--F446RE-blue)
+![IDE](https://img.shields.io/badge/IDE-STM32CubeIDE%202.2.0-darkblue)
+![Library](https://img.shields.io/badge/Library-STM32%20HAL-green)
+![Language](https://img.shields.io/badge/Language-C-orange)
+
+A beginner-friendly embedded project that blinks the on-board green user LED (**LD2**) of the **STM32 NUCLEO-F446RE** using the STM32 HAL library. The project is configured in **STM32CubeMX** and built, flashed and run in **STM32CubeIDE 2.2.0**.
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Key Features](#key-features)
+3. [Hardware Required](#hardware-required)
+4. [System Architecture](#system-architecture)
+5. [STM32CubeMX Configuration](#stm32cubemx-configuration)
+   - [Pinout & Configuration](#1-pinout--configuration-tab)
+   - [Project Manager](#2-project-manager-tab)
+6. [Firmware (STM32CubeIDE main.c)](#firmware-stm32cubeide-mainc)
+7. [Working Principle](#working-principle)
+8. [Output](#output)
+9. [How to Run](#how-to-run)
+10. [Testing](#testing)
+11. [Troubleshooting](#troubleshooting)
+12. [Technologies and Concepts](#technologies-and-concepts)
+13. [Future Improvements](#future-improvements)
+14. [Project Video](#project-video)
+
+---
+
 ## Project Overview
 
-This project blinks the on-board green user LED (**LD2**) of the **STM32 NUCLEO-F446RE** board using the STM32 HAL library.
-
-The LED stays **ON for 1 second** and **OFF for 1 second**, so one full blink cycle takes **2 seconds**.
-
-The project was created with **STM32CubeMX** and built, flashed and run with **STM32CubeIDE 2.2.0**.
+The on-board LED **LD2** stays **ON for 1 second** and **OFF for 1 second**, giving a blink cycle of **2 seconds**. The LED is toggled in the main loop with `HAL_GPIO_TogglePin()`, and the delay is created with `HAL_Delay()`.
 
 ## Key Features
 
 - STM32 NUCLEO-F446RE board
-- On-board LED (LD2) control
-- GPIO output configuration using STM32CubeMX
+- On-board LED (LD2) control on pin **PA5**
+- GPIO output configured with STM32CubeMX
 - STM32 HAL library
-- Toggle-based LED blinking
-- 1 second delay using HAL_Delay()
+- Toggle-based LED blinking with a 1 second delay
 - Programming and debugging through the on-board ST-LINK
 
 ## Hardware Required
 
-| Component | Quantity |
-| --------- | -------- |
-| STM32 NUCLEO-F446RE board | 1 |
-| USB cable (data cable) | 1 |
+| Component                 | Quantity |
+| ------------------------- | -------- |
+| STM32 NUCLEO-F446RE board | 1        |
+| USB cable (data cable)    | 1        |
 
-No external components are needed. The LED is on the board.
+No external components are needed because the LED is on the board.
 
 ## System Architecture
 
 ```
-STM32F4 Microcontroller
-          ↓
-   GPIO Pin PA5
-          ↓
- On-board LED (LD2)
+PC (STM32CubeIDE)
+       │  USB
+       ▼
+ On-board ST-LINK  ──►  STM32F4 Microcontroller
+                                │
+                          GPIO Pin PA5
+                                │
+                                ▼
+                       On-board LED (LD2)
 ```
 
-## Pin Configuration
-
-| Signal | MCU Pin | Mode |
-| ------ | ------- | ---- |
-| LD2 (green user LED) | PA5 | GPIO_Output |
+---
 
 ## STM32CubeMX Configuration
 
-1. Create a new project and select the **NUCLEO-F446RE** board in the Board Selector.
-2. Initialize all peripherals with their default mode.
-3. Check that **PA5** is set as `GPIO_Output` and labeled `LD2`.
-4. In Project Manager, set the toolchain to **STM32CubeIDE**.
-5. Click **Generate Code**.
+### 1. Pinout & Configuration Tab
 
-## Code
+| Item                  | Setting                              |
+| --------------------- | ------------------------------------ |
+| Board                 | NUCLEO-F446RE (Board Selector)       |
+| Pin                   | **PA5**                              |
+| Pin mode              | `GPIO_Output`                        |
+| User label            | `LD2`                                |
+| GPIO output level     | Low                                  |
+| GPIO mode             | Output Push Pull                     |
+| GPIO Pull-up/Pull-down| No pull-up and no pull-down          |
+| Maximum output speed  | Low                                  |
 
-The code is added inside the main loop in `Core/Src/main.c`:
+Path in CubeMX: `Pinout & Configuration → System Core → GPIO → PA5`
+
+![CubeMX Pinout and Configuration](PinOut.jpeg)
+
+### 2. Project Manager Tab
+
+**Project settings**
+
+| Setting                | Value                           |
+| ---------------------- | ------------------------------- |
+| Project Name           | `<your project name>`           |
+| Project Location       | `<your project folder>`         |
+| Toolchain / IDE        | **STM32CubeIDE**                |
+| Firmware Package       | `<STM32Cube FW_F4 version>`     |
+
+**Code Generator**
+
+| Option                                                   | State     |
+| -------------------------------------------------------- | --------- |
+| Copy only the necessary library files                    | Selected  |
+| Generate peripheral initialization as a pair of .c/.h    | Unchecked |
+
+After setting these options, click **GENERATE CODE**.
+
+![CubeMX Project Manager](Project.jpeg)
+
+---
+
+## Firmware (STM32CubeIDE main.c)
+
+File: `Core/Src/main.c`
+
+The blink logic is written inside the `USER CODE BEGIN 3` section of the `while (1)` loop:
 
 ```c
-/* USER CODE BEGIN 3 */
-HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-HAL_Delay(1000);
-/* USER CODE END 3 */
+int main(void)
+{
+  HAL_Init();
+  SystemClock_Config();
+  MX_GPIO_Init();
+
+  while (1)
+  {
+    /* USER CODE BEGIN 3 */
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    HAL_Delay(1000);
+    /* USER CODE END 3 */
+  }
+}
 ```
 
-## Working
+The GPIO initialization generated by CubeMX (`MX_GPIO_Init`) configures PA5 as a push-pull output:
 
-`HAL_GPIO_TogglePin()` changes the state of the LED pin each time it runs.
+```c
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-`HAL_Delay(1000)` waits 1000 ms before the next toggle.
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+  GPIO_InitStruct.Pin = LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+}
+```
+
+> The generated file also contains `SystemClock_Config()` and other CubeMX code, which is not shown here. Only the lines between `USER CODE BEGIN` and `USER CODE END` were written manually.
+
+![STM32CubeIDE main.c](Program.jpeg)
+
+---
+
+## Working Principle
+
+1. `HAL_Init()` initializes the HAL library and the SysTick timer.
+2. `MX_GPIO_Init()` enables the GPIO clock and configures PA5 as an output.
+3. In the infinite loop, `HAL_GPIO_TogglePin()` flips the state of LD2.
+4. `HAL_Delay(1000)` waits 1000 ms before the next toggle.
 
 ```
 LED ON  → wait 1 s → LED OFF → wait 1 s → repeat
@@ -75,8 +175,6 @@ LED ON  → wait 1 s → LED OFF → wait 1 s → repeat
 ## Output
 
 The green LED (LD2) on the board blinks continuously with a 2 second cycle.
-
-### LED Blink Output
 
 ![LED Blink Output](Output.jpeg)
 
@@ -91,30 +189,19 @@ The green LED (LD2) on the board blinks continuously with a 2 second cycle.
 
 ## Testing
 
-| Test | Result |
-| ---- | ------ |
-| Build | 0 errors, 0 warnings |
-| Flash through ST-LINK | Successful |
-| LD2 blinking | Every 1 second ON / 1 second OFF |
+| Test                  | Result                           |
+| --------------------- | -------------------------------- |
+| Build                 | 0 errors, 0 warnings             |
+| Flash through ST-LINK | Successful                       |
+| LD2 blinking          | Every 1 second ON / 1 second OFF |
 
-## Important Notes
+## Troubleshooting
 
-### Jumpers
-
-Both **CN2** jumper caps on the board must be fitted. If they are missing, the programmer cannot connect to the chip and the debugger shows:
-
-```
-Error in initializing ST-LINK device.
-Reason: No device found on target.
-```
-
-### Code Placement
-
-Write your own code only between the `USER CODE BEGIN` and `USER CODE END` comments. Anything outside them is erased when the code is regenerated in CubeMX.
-
-### USB Cable
-
-Use a data-capable USB cable. Some cables only charge.
+| Problem | Solution |
+| ------- | -------- |
+| `Error in initializing ST-LINK device. Reason: No device found on target.` | Fit both **CN2** jumper caps on the board. |
+| Board not detected | Use a **data-capable** USB cable. Some cables only charge. |
+| My code disappeared after regenerating | Write code only between `USER CODE BEGIN` and `USER CODE END`. Everything else is overwritten by CubeMX. |
 
 ## Technologies and Concepts
 
@@ -123,8 +210,8 @@ Use a data-capable USB cable. Some cables only charge.
 - STM32CubeMX
 - STM32 HAL library
 - GPIO output
-- HAL_GPIO_TogglePin
-- HAL_Delay
+- `HAL_GPIO_TogglePin`
+- `HAL_Delay`
 - ST-LINK programming and debugging
 
 ## Future Improvements
@@ -134,8 +221,8 @@ Use a data-capable USB cable. Some cables only charge.
 - Ultrasonic sensor distance measurement
 - 16×2 I2C LCD display
 - UART serial output
-- Timer-based blinking without HAL_Delay
+- Timer-based blinking without `HAL_Delay`
 
-# 🎥 Project Video
+## Project Video
 
 [▶️ Watch the LED Blink Demonstration](https://drive.google.com/file/d/1-alz60q_yz7m7Dc0q-guLLVWQuhK1pGI/view?usp=drivesdk)
